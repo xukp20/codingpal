@@ -5,6 +5,18 @@ import streamlit as st
 from code_editor import code_editor
 
 
+def byte2str(bytes):
+    string = str(bytes, encoding="utf8")
+    if string[0] == '"':
+        string = string[1:]
+    if string[-1] == '"':
+        string = string[:-1]
+    string = string.replace("\\n", "\n").replace("\\0", "\0").replace(
+        "\\'", "\'").replace("\\\\", "\\").replace('\\"',
+                                                   '\"').replace("\\r", "\r")
+    return string
+
+
 def option_to_url(string):
     if string == 'Code to pseudo':
         return 'code2pseudo'
@@ -31,12 +43,9 @@ if option == 'Code to pseudo':
     code_str = code_editor('welcome to use code to pseudo')
     if code_str['text'] != '':
         req = {'code': code_str['text']}
-        r = requests.put(ROOT, req)
-        content = str(r.content)
-        content = content.replace("\\n", "\n").replace("\\0", "\0").replace("\\'", "\'").replace("\\\\", "\\"). \
-            replace('\\"', '\"').replace('\\', '')
-        st.markdown(
-            content
+        r = requests.put(ROOT, json.dumps(req))
+        st.code(
+            byte2str(r.content)
         )
     else:
         st.warning('Please enter the code', icon="⚠️")
@@ -49,13 +58,8 @@ elif option == 'Text to pseudo':
         URL = f"{ROOT}?text={text}"
         r = requests.put(URL)
         content = r.content
-        try:
-            content = content.decode("utf-8")[1:-1]
-        except:
-            content = content.decode("gbk")[1:-1]
-        content = content.replace('\\n', '\n')
-        st.markdown(
-            content
+        st.code(
+            byte2str(content)
         )
     else:
         st.warning('Please enter the text', icon="⚠️")
@@ -64,13 +68,9 @@ elif option == 'Generate Document':
     code_str = code_editor('welcome to use generate document')
     if code_str['text'] != '':
         req = {"code": code_str['text']}
-        print(req)
         r = requests.put(ROOT, json.dumps(req))
-        content = str(r.content)
-        content = content.replace("\\n", "\n").replace("\\0", "\0").replace("\\'", "\'").replace("\\\\", "\\"). \
-            replace('\\"', '\"').replace('\\', '')
         st.markdown(
-            content
+            byte2str(r.content)
         )
     else:
         st.warning('Please enter the code', icon="⚠️")
@@ -80,11 +80,8 @@ elif option == 'Generate Comment':
     if code_str['text'] != '':
         req = {'code': code_str['text']}
         r = requests.put(ROOT, json.dumps(req))
-        content = str(r.content)
-        content = content.replace("\\n", "\n").replace("\\0", "\0").replace("\\'", "\'").replace("\\\\", "\\"). \
-            replace('\\"', '\"').replace('\\', '')
-        st.markdown(
-            content
+        st.code(
+            byte2str(r.content)
         )
     else:
         st.warning('Please enter the code', icon="⚠️")
@@ -93,12 +90,9 @@ elif option == 'Explain':
     code_str = code_editor('welcome to use explain')
     if code_str['text'] != '':
         req = {'code': code_str['text']}
-        r = requests.put(ROOT, req)
-        content = str(r.content)
-        content = content.replace("\\n", "\n").replace("\\0", "\0").replace("\\'", "\'").replace("\\\\", "\\"). \
-            replace('\\"', '\"').replace('\\', '')
+        r = requests.put(ROOT, json.dumps(req))
         st.markdown(
-            content
+            byte2str(r.content)
         )
     else:
         st.warning('Please enter the code', icon="⚠️")
@@ -109,12 +103,9 @@ else:
     )
     if text != 'welcome to use explain bug':
         req = {'trace': text}
-        r = requests.put(ROOT, req)
-        content = str(r.content)
-        content = content.replace("\\n", "\n").replace("\\0", "\0").replace("\\'", "\'").replace("\\\\", "\\"). \
-            replace('\\"', '\"').replace('\\', '')
+        r = requests.put(ROOT, json.dumps(req))
         st.markdown(
-            content
+            byte2str(r.content)
         )
     else:
         st.warning('Please enter the code', icon="⚠️")

@@ -8,6 +8,18 @@ option = st.selectbox(
 ROOT = "http://101.43.131.30:8080/search/" + option
 
 
+def byte2str(bytes):
+    string = str(bytes, encoding="utf8")
+    if string[0] == '"':
+        string = string[1:]
+    if string[-1] == '"':
+        string = string[:-1]
+    string = string.replace("\\n", "\n").replace("\\0", "\0").replace(
+        "\\'", "\'").replace("\\\\", "\\").replace('\\"',
+                                                   '\"').replace("\\r", "\r")
+    return string
+
+
 if option == "repo":
     col1, col2 = st.columns(2)
 
@@ -36,11 +48,8 @@ if option == "repo":
     if keyword != '' and count != '' and require != '':
         URL = f"{ROOT}?keyword={keyword}&language={language}&sort={sort}&count={count}&require={require}"
         r = requests.get(URL)
-        content = str(r.content)[3:-2]
-        content = content.replace("\\n", "\n").replace("\\0", "\0").replace("\\'", "\'").replace("\\\\", "\\"). \
-            replace('\\"', '\"').replace('\\', '')
         st.markdown(
-            content
+            byte2str(r.content)
         )
     else:
         st.warning('Please enter the keyword/count/require', icon="⚠️")
@@ -62,11 +71,8 @@ elif option == 'doc':
     if keyword != '':
         URL = f"{ROOT}?keyword={keyword}&language={language}"
         r = requests.get(URL)
-        content = str(r.content)[3:-2]
-        content = content.replace("\\n", "\n").replace("\\0", "\0").replace("\\'", "\'").replace("\\\\", "\\"). \
-            replace('\\"', '\"').replace('\\', '')
         st.markdown(
-            content
+            byte2str(r.content)
         )
     else:
         st.warning('Please enter the keyword', icon="⚠️")
@@ -89,13 +95,11 @@ elif option == 'solution':
             ('Google', 'Baidu', 'Bing'))
 
     if keyword != '':
-        URL = f"{ROOT}?keyword={keyword}&require={require}"
+        URL = f"{ROOT}?keyword={keyword}&website={website}&require={require}"
+        print(URL)
         r = requests.put(URL)
-        content = str(r.content)[3:-2]
-        content = content.replace("\\n", "\n").replace("\\0", "\0").replace("\\'", "\'").replace("\\\\", "\\"). \
-            replace('\\"', '\"').replace('\\', '')
         st.markdown(
-            content
+            byte2str(r.content)
         )
     else:
         st.warning('Please enter the keyword', icon="⚠️")

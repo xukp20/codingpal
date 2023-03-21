@@ -21,7 +21,7 @@ def option_to_url(string):
 
 
 option = st.selectbox(
-    'What type do you want to search for',
+    'What type of service do you want',
     ('Code to pseudo', 'Text to pseudo', 'Generate Document', 'Generate Comment', 'Explain', 'Explain Bug'))
 
 ROOT = "http://101.43.131.30:8080/document/" + option_to_url(option)

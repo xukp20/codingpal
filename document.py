@@ -63,9 +63,9 @@ elif option == 'Generate Document':
     tips = st.text('If you are finished typing, press Ctrl+Enter')
     code_str = code_editor('welcome to use generate document')
     if code_str['text'] != '':
-        req = {'code': json.dumps(code_str['text'])}
+        req = {"code": code_str['text']}
         print(req)
-        r = requests.put(ROOT, req)
+        r = requests.put(ROOT, json.dumps(req))
         content = str(r.content)
         content = content.replace("\\n", "\n").replace("\\0", "\0").replace("\\'", "\'").replace("\\\\", "\\"). \
             replace('\\"', '\"').replace('\\', '')

@@ -79,7 +79,7 @@ elif option == 'Generate Comment':
     code_str = code_editor('welcome to use generate comment')
     if code_str['text'] != '':
         req = {'code': code_str['text']}
-        r = requests.put(ROOT, req)
+        r = requests.put(ROOT, json.dumps(req))
         content = str(r.content)
         content = content.replace("\\n", "\n").replace("\\0", "\0").replace("\\'", "\'").replace("\\\\", "\\"). \
             replace('\\"', '\"').replace('\\', '')

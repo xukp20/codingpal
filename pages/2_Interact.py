@@ -45,17 +45,117 @@ def main_page():
     with text_tab:
         text_page()
     with search_tab:
-        search_page()
+        # search_page()
+        option = st.selectbox(
+            'What type do you want to search for',
+            ('repo', 'doc', 'solution'))
 
-strs = ['option', 'caption_info', 'code', 'lang', 'tips']
-dicts = ['params', 'result']
-bools = ['got_result']
+        ROOT = "http://101.43.131.30:8080/search/" + option
+
+        def byte2str(bytes):
+            string = str(bytes, encoding="utf8")
+            if string[0] == '"':
+                string = string[1:]
+            if string[-1] == '"':
+                string = string[:-1]
+            string = string.replace("\\n", "\n").replace("\\0", "\0").replace(
+                "\\'", "\'").replace("\\\\", "\\").replace('\\"',
+                                                           '\"').replace("\\r", "\r")
+            return string
+
+        if option == "repo":
+            col1, col2 = st.columns(2)
+
+            with col1:
+                keyword = st.text_input(
+                    "Enter the keyword 👇",
+                    '',
+                )
+                count = st.text_input(
+                    "Enter your count 👇",
+                    '',
+                )
+                require = text_input = st.text_input(
+                    "Enter your require 👇",
+                    '',
+                )
+
+            with col2:
+                language = st.selectbox(
+                    'What language do you want to search for',
+                    ('Python', 'Cpp', 'JavaScript', 'Rust', 'none'))
+                sort = st.selectbox(
+                    'How do you want to sort your search results',
+                    ('stars', 'forks', 'updated'))
+
+            if keyword != '' and count != '' and require != '':
+                URL = f"{ROOT}?keyword={keyword}&language={language}&sort={sort}&count={count}&require={require}"
+                r = requests.get(URL)
+                st.markdown(
+                    byte2str(r.content)
+                )
+            else:
+                st.warning('Please enter the keyword/count/require', icon="⚠️")
+
+        elif option == 'doc':
+            col1, col2 = st.columns(2)
+
+            with col1:
+                keyword = st.text_input(
+                    "Enter the key word 👇",
+                    '',
+                )
+
+            with col2:
+                language = st.selectbox(
+                    'What language do you want to search for',
+                    ('Python', 'Cpp', 'JavaScript', 'Rust', 'none'))
+
+            if keyword != '':
+                URL = f"{ROOT}?keyword={keyword}&language={language}"
+                r = requests.get(URL)
+                st.markdown(
+                    byte2str(r.content)
+                )
+            else:
+                st.warning('Please enter the keyword', icon="⚠️")
+        elif option == 'solution':
+            col1, col2 = st.columns(2)
+
+            with col1:
+                keyword = st.text_input(
+                    "Enter the key word 👇",
+                    '',
+                )
+                require = text_input = st.text_input(
+                    "Enter your require 👇",
+                    '',
+                )
+
+            with col2:
+                website = st.selectbox(
+                    'What language do you want to search for',
+                    ('Google', 'Baidu', 'Bing'))
+
+            if keyword != '':
+                URL = f"{ROOT}?keyword={keyword}&website={website}&require={require}"
+                print(URL)
+                r = requests.put(URL)
+                st.markdown(
+                    byte2str(r.content)
+                )
+            else:
+                st.warning('Please enter the keyword', icon="⚠️")
+
+strs = ['editor_option', 'editor_caption_info', 'editor_code', 'editor_lang', 'editor_tips']
+dicts = ['editor_params', 'editor_result']
+bools = ['editor_got_result']
 for s in strs:
     if s not in st.session_state:
         st.session_state[s] = ''
-        if s == 'lang':
+        if s == 'editor_lang':
             st.session_state[s] = 'python'
-        if s == 'tips':
+        if s == 'editor_tips':
             st.session_state[s] = 'please press Ctrl + Enter to submit your code'
 for b in bools:
     if b not in st.session_state:
@@ -67,28 +167,27 @@ for d in dicts:
 def editor_page():
     editor_col, info_col = st.columns(2)
     with editor_col:
-        code = code_editor(st.session_state.code)
+        code = code_editor(st.session_state.editor_code)
         if code['text'] == '':
             st.warning('please press Ctrl + Enter to submit your code')
-        elif not st.session_state.got_result:
+        elif not st.session_state.editor_got_result:
             st.caption('select tools for your code on the right')
 
-        elif st.session_state.got_result:
+        elif st.session_state.editor_got_result:
             st.warning('please press Ctrl + Enter to submit your code')
-            option = st.session_state.option
+            option = st.session_state.editor_option
             if option == "translate":
-                print_code(st.session_state.result['code'], st.session_state.result['lang'])
+                print_code(st.session_state.editor_result['code'], st.session_state.editor_result['lang'])
             elif option == "debug":
-                st.write(st.session_state.result['info'])
+                st.write(st.session_state.editor_result['info'])
             elif option == "generate":
-                print_code(st.session_state.result['text'], code['lang'])
+                print_code(st.session_state.editor_result['text'], code['lang'])
             elif option == "comment":
-                print_code(st.session_state.result['code'], code['lang'])
+                print_code(st.session_state.editor_result['code'], code['lang'])
             elif option == "explain":
-                st.write(st.session_state.result['text'])
+                st.write(st.session_state.editor_result['text'])
             elif option == 'code2pseudo':
-                st.write(st.session_state.result['text'])
-            st.session_state.got_result = False
+                st.write(st.session_state.editor_result['text'])
 
         
     with info_col:
@@ -98,12 +197,14 @@ def editor_page():
             ),
             label_visibility='collapsed'
             )
+        st.session_state.editor_caption_info = ''
         if option == "Completion":
-            st.session_state.got_result = False
-            st.session_state.option = "completion"
-            st.session_state.params = {
+            st.session_state.editor_got_result = False
+            st.session_state.editor_option = "completion"
+            st.session_state.editor_params = {
                 "src": code["text"],
             }
+            st.session_state.editor_got_result = False
 
         elif option == "Translate":
             st.session_state.got_result = False
@@ -117,96 +218,188 @@ def editor_page():
                 "src": src,
                 "tar": tar,
             }
+            st.session_state.editor_got_result = False
+
 
         elif option == "Debug":
-            st.session_state.option = "debug"
-            st.session_state.got_result = False
+            st.session_state.editor_option = "debug"
+            st.session_state.editor_got_result = False
 
         elif option == "ToPseudo":
-            st.session_state.option = "code2pseudo"
-            st.session_state.got_result = False
-            st.session_state.params = {
+            st.session_state.editor_option = "code2pseudo"
+            st.session_state.editor_got_result = False
+            st.session_state.editor_params = {
                 "code": code["text"],
             }
 
         elif option == "Document":
-            st.session_state.option = "generate"
-            st.session_state.got_result = False
-            st.session_state.params = {
+            st.session_state.editor_option = "generate"
+            st.session_state.editor_got_result = False
+            st.session_state.editor_params = {
                 "code": code["text"],
             }
         
         elif option == "Comment":
-            st.session_state.option = "comment"
-            st.session_state.got_result = False
-            st.session_state.params = {
+            st.session_state.editor_option = "comment"
+            st.session_state.editor_got_result = False
+            st.session_state.editor_params = {
                 "code": code["text"],
             }
 
         elif option == "Logic":
-            st.session_state.option = "explain"
-            st.session_state.got_result = False
-            st.session_state.params = {
+            st.session_state.editor_option = "explain"
+            st.session_state.editor_got_result = False
+            st.session_state.editor_params = {
                 "code": code["text"],
             }
 
         cols = st.columns(6)
         with cols[5]:
-            if st.button("Run"):
-                st.session_state.got_result = True
-                if st.session_state.option == "completion":
-                    res = requests.put(CODING_API + "completion", json=st.session_state.params)
-                    st.session_state.code = byte2str(res.content)
-                    st.session_state.caption_info = 'Completion Done'
+            if st.button("Run", key=1):
+                st.session_state.editor_got_result = True
+                if st.session_state.editor_option == "completion":
+                    res = requests.put(CODING_API + "completion", json=st.session_state.editor_params)
+                    st.session_state.editor_code = byte2str(res.content)
+                    st.session_state.editor_caption_info = 'Completion Done'
                     st.experimental_rerun()
-                elif st.session_state.option == "translate":
-                    res = requests.put(CODING_API + "translate", json=st.session_state.params)
-                    st.session_state.result['code'] = byte2str(res.content)
-                    st.session_state.result['lang'] = st.session_state.params['tar']
-                    st.session_state.caption_info = 'Translate Done'
+                elif st.session_state.editor_option == "translate":
+                    res = requests.put(CODING_API + "translate", json=st.session_state.editor_params)
+                    st.session_state.editor_result['code'] = byte2str(res.content)
+                    st.session_state.editor_result['lang'] = st.session_state.editor_params['tar']
+                    st.session_state.editor_caption_info = 'Translate Done'
                     st.experimental_rerun()
-                elif st.session_state.option == "debug":
-                    res = requests.put(CODING_API + "debug", json=st.session_state.params)
-                    st.session_state.result['info'] = byte2str(res.content)
-                    st.session_state.caption_info = 'Debug Done'
+                elif st.session_state.editor_option == "debug":
+                    res = requests.put(CODING_API + "debug", json=st.session_state.editor_params)
+                    st.session_state.editor_result['info'] = byte2str(res.content)
+                    st.session_state.editor_caption_info = 'Debug Done'
                     st.experimental_rerun()
-                elif st.session_state.option == "code2pseudo":
-                    res = requests.put(DOCUMENT_API + "code2pseudo", json=st.session_state.params)
-                    st.session_state.result['text'] = byte2str(res.content)
-                    st.session_state.caption_info = 'ToPseudo Done'
+                elif st.session_state.editor_option == "code2pseudo":
+                    res = requests.put(DOCUMENT_API + "code2pseudo", json=st.session_state.editor_params)
+                    st.session_state.editor_result['text'] = byte2str(res.content)
+                    st.session_state.editor_caption_info = 'ToPseudo Done'
                     st.experimental_rerun()
-                elif st.session_state.option == "generate":
-                    res = requests.put(DOCUMENT_API + "generate", json=st.session_state.params)
-                    st.session_state.result['text'] = byte2str(res.content)
-                    st.session_state.caption_info = 'Document Done'
+                elif st.session_state.editor_option == "generate":
+                    res = requests.put(DOCUMENT_API + "generate", json=st.session_state.editor_params)
+                    st.session_state.editor_result['text'] = byte2str(res.content)
+                    st.session_state.editor_caption_info = 'Document Done'
                     st.experimental_rerun()
-                elif st.session_state.option == "comment":
-                    res = requests.put(DOCUMENT_API + "comment", json=st.session_state.params)
+                elif st.session_state.editor_option == "comment":
+                    res = requests.put(DOCUMENT_API + "comment", json=st.session_state.editor_params)
                     print(res.content)
-                    st.session_state.result['code'] = byte2str(res.content)
-                    st.session_state.caption_info = 'Comment Done'
+                    st.session_state.editor_result['code'] = byte2str(res.content)
+                    st.session_state.editor_caption_info = 'Comment Done'
                     st.experimental_rerun()
-                elif st.session_state.option == "explain":
-                    res = requests.put(DOCUMENT_API + "explain", json=st.session_state.params)
-                    st.session_state.result['text'] = byte2str(res.content)
-                    st.session_state.caption_info = 'Logic Done'
+                elif st.session_state.editor_option == "explain":
+                    res = requests.put(DOCUMENT_API + "explain", json=st.session_state.editor_params)
+                    st.session_state.editor_result['text'] = byte2str(res.content)
+                    st.session_state.editor_caption_info = 'Logic Done'
                     st.experimental_rerun()
-        st.caption(st.session_state.caption_info)
+        st.caption(st.session_state.editor_caption_info)
         # else:
         #     st.session_state.caption_info = 'choose the tool you need'
         #     st.session_state.code = code["text"]
 
             
-
+strs = ['text_option', 'text_caption_info', 'text_code', 'text_lang', 'text_tips', 'text_text']
+dicts = ['text_params', 'text_result']
+bools = ['text_got_result']
+for s in strs:
+    if s not in st.session_state:
+        st.session_state[s] = ''
+        if s == 'text_lang':
+            st.session_state[s] = 'python'
+        if s == 'text_tips':
+            st.session_state[s] = 'please press Ctrl + Enter to submit your code'
+for b in bools:
+    if b not in st.session_state:
+        st.session_state[b] = False
+for d in dicts:
+    if d not in st.session_state:
+        st.session_state[d] = {}
 
 
 
             
 
 def text_page():
-    st.title('Text Page')
+    text_col, result_col = st.columns(2)
+    with text_col:
+        option = st.selectbox("Tools",
+            ('Generate', 'Pseudo To Code', 'Text To Pseudo', 'Explain Bug'),
+        )
+        st.session_state.text_text = st.text_area("Text", '')
+        st.session_state.text_caption_info = ''
+        if option == 'Generate':
+            st.session_state.text_option = 'generate'
+            language = st.selectbox("Language", LANGUAGES)
+            st.session_state.text_params = {
+                'info': st.session_state.text_text,
+                'language': language,
+            }
+            # st.session_state.text_got_result = False
+
+        elif option == 'Pseudo To Code':
+            st.session_state.text_option = 'pseudo2code'
+            language = st.selectbox("Language", LANGUAGES)
+            st.session_state.text_params = {
+                "pseudo": st.session_state.text_text,
+                "tar": language,
+            }
+            # st.session_state.text_got_result = False
+
+        elif option == 'Text To Pseudo':
+            st.session_state.text_option = 'text2pseudo'
+            st.session_state.text_params = {
+                "text": st.session_state.text_text,
+            }
+            # st.session_state.text_got_result = False
+
+        elif option == 'Explain Bug':
+            st.session_state.text_option = 'explain_bug'
+            st.session_state.text_params = {
+                "trace": st.session_state.text_text,
+            }
+            # st.session_state.text_got_result = False
+
+
+        if st.button("Run", key=2):
+            st.session_state.text_got_result = True
+            if st.session_state.text_option == 'generate':
+                res = requests.get(CODING_API + "generate?info=" + st.session_state.text_params['info'] + "&language=" + st.session_state.text_params['language'])
+                st.session_state.text_result['code'] = byte2str(res.content)
+                st.session_state.text_caption_info = 'Generate Done'
+                st.experimental_rerun()
+            elif st.session_state.text_option == 'pseudo2code':
+                res = requests.put(CODING_API + "pseudo2code", json=st.session_state.text_params)
+                st.session_state.text_result['code'] = byte2str(res.content)
+                st.session_state.text_caption_info = 'Pseudo To Code Done'
+                st.experimental_rerun()
+            elif st.session_state.text_option == 'text2pseudo':
+                res = requests.put(DOCUMENT_API + "text2pseudo?text=" + st.session_state.text_params['text'])
+                st.session_state.text_result['text'] = byte2str(res.content)
+                st.session_state.text_caption_info = 'Text To Pseudo Done'
+                st.experimental_rerun()
+            elif st.session_state.text_option == 'explain_bug':
+                res = requests.put(DOCUMENT_API + "explain_bug", json=st.session_state.text_params)
+                st.session_state.text_result['text'] = byte2str(res.content)
+                st.session_state.text_caption_info = 'Explain Bug Done'
+                st.experimental_rerun()
+        st.caption(st.session_state.text_caption_info)
+    
+    with result_col:
+        if st.session_state.text_got_result:
+            if st.session_state.text_option == 'generate':
+                print_code(st.session_state.text_result['code'], st.session_state.text_params['language'])
+            elif st.session_state.text_option == 'pseudo2code':
+                print_code(st.session_state.text_result['code'], st.session_state.text_params['tar'])
+            elif st.session_state.text_option == 'text2pseudo':
+                st.markdown(st.session_state.text_result['text'])
+            elif st.session_state.text_option == 'explain_bug':
+                st.markdown(st.session_state.text_result['text'])
+        st.session_state.text_got_result = False
 
 def search_page():
-    st.title('Search Page')
+    st.title("Search")
+
 
 main_page()

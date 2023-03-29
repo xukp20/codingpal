@@ -72,11 +72,11 @@ def main_page():
                     '',
                 )
                 count = st.text_input(
-                    "Enter your count 👇",
+                    "Enter the count you need👇",
                     '',
                 )
                 require = text_input = st.text_input(
-                    "Enter your require 👇",
+                    "Enter your requirement 👇",
                     '',
                 )
 
@@ -124,17 +124,17 @@ def main_page():
 
             with col1:
                 keyword = st.text_input(
-                    "Enter the key word 👇",
+                    "Enter the bug trace or any info you want to search for 👇",
                     '',
                 )
                 require = text_input = st.text_input(
-                    "Enter your require 👇",
+                    "Enter your requirement 👇",
                     '',
                 )
 
             with col2:
                 website = st.selectbox(
-                    'What language do you want to search for',
+                    'What website do you want to search for',
                     ('Google', 'Baidu', 'Bing'))
 
             if keyword != '':
@@ -208,12 +208,12 @@ def editor_page():
 
         elif option == "Translate":
             st.session_state.got_result = False
-            st.session_state.option = "translate"
+            st.session_state.editor_option = "translate"
             src = st.selectbox("Source Language", LANGUAGES)
             tar = st.selectbox("Target Language", LANGUAGES)
             if src == tar:
                 st.warning('The source language and the target language should not be the same')
-            st.session_state.params = {
+            st.session_state.editor_params = {
                 "code": code["text"],
                 "src": src,
                 "tar": tar,

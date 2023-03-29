@@ -1,9 +1,7 @@
 import streamlit as st
-from streamlit_multipage import MultiPage
 import requests
 from code_editor import code_editor
 import json
-
 
 def try_out():
     st.title("Try Out")
@@ -283,16 +281,4 @@ def try_out():
             else:
                 st.warning('Please enter the code', icon="⚠️")
 
-
-def main_page():
-    st.title("Coding")
-    input = code_editor("")
-
-
-page_names_to_funcs = {
-    "Try Out": try_out,
-    "Main Page": main_page,
-}
-
-demo_name = st.sidebar.selectbox("Choose A Page", page_names_to_funcs.keys())
-page_names_to_funcs[demo_name]()
+try_out()

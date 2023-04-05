@@ -1,3 +1,4 @@
 streamlit-code-editor
 streamlit~=1.20.0
 requests~=2.28.2
+streamlit_chat

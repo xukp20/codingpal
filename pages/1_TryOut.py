@@ -106,7 +106,7 @@ def try_out():
                     "Enter your count 👇",
                     '',
                 )
-                require = text_input = st.text_input(
+                require = st.text_input(
                     "Enter your require 👇",
                     '',
                 )

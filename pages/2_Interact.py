@@ -95,7 +95,7 @@ def main_page():
                     byte2str(r.content)
                 )
             else:
-                st.warning('Please enter the keyword/count/require', icon="⚠️")
+                st.warning('Please enter the keyword/count/require')
 
         elif option == 'doc':
             col1, col2 = st.columns(2)
@@ -118,7 +118,7 @@ def main_page():
                     byte2str(r.content)
                 )
             else:
-                st.warning('Please enter the keyword', icon="⚠️")
+                st.warning('Please enter the keyword')
         elif option == 'solution':
             col1, col2 = st.columns(2)
 
@@ -145,7 +145,7 @@ def main_page():
                     byte2str(r.content)
                 )
             else:
-                st.warning('Please enter the keyword', icon="⚠️")
+                st.warning('Please enter the keyword')
 
 strs = ['editor_option', 'editor_caption_info', 'editor_code', 'editor_lang', 'editor_tips']
 dicts = ['editor_params', 'editor_result']

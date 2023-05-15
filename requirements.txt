@@ -3,3 +3,4 @@ streamlit~=1.20.0
 requests~=2.28.2
 streamlit_chat
 streamlit_tree_select
+st_pages

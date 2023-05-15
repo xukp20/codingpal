@@ -28,14 +28,21 @@ def print_code(code_str, lang):
         
 def main_page():
     st.set_page_config(
-        page_title='CodingPal',
-        page_icon='🐍',
+        page_title='Coding',
+        page_icon='🧰',
         layout='wide',
-        initial_sidebar_state='expanded',
+        initial_sidebar_state='collapsed',
     )
-
-    with st.sidebar:
-        st.title('Main Page for CodingPal')
+    with st.expander('help'):
+        editor_help, text_help, search_help = st.tabs(("Editor", "Text", "Search"))
+        with editor_help:
+            st.caption('This tab contains the text based tools.\n- Input your text and press Ctrl+Enter to submit\n- Select the tool you need on the right side\n- Provide more details if the tool needs\n- Run\n')
+        with text_help:
+            st.caption('This tab contains the code based tools.\n- Input your code and press Ctrl+Enter to submit\n- Select the tool you need on the right side\n- Run\n')
+        with search_help:
+            st.caption("""- Repo search:\n    - Input the keyword for Github API and press Enter to apply\n   - Choose the number of repos you want and enter\n   - Enter the additional requirement for ChatGPT to select and process the results\n  - Choose language and the sorting way\n   - The search begins after you set all the fields\n - Doc search:\n    - Choose the target language you need to search\n   - Enter the keyword and press enter to start searching\n
+- Solution search:\n    - Enter the bug trace or info and press enter to start searching\n    - Enter the requirement for ChatGPT to choose from the results\n    - Choose the search engine you want to use (sorry but only bing is available now)\n    - The search begins after you set all the fields\n
+            """)
 
     editor_tab, text_tab, search_tab = st.tabs(
         ('Editor', 'Text', 'Search'))

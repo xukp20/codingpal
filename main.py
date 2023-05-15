@@ -1,14 +1,13 @@
 import streamlit as st
+from st_pages import Page, show_pages, add_page_title
+add_page_title("Home")
 
-st.title("Welcome to CodingPal")
-
-
-st.markdown(
-    """
-    CodingPal is a programming tool that helps you write code, fix bugs, and even generate projects (in development).
-    
-    **👈 Select a demo from the sidebar** to use CodingPal!
-    ### Want to learn more?
-    - Jump into our [documentation](https://docs.streamlit.io)
-"""
+show_pages(
+    [
+        # Page("pages/1_TryOut.py", "Try Out"),
+        Page('home.py', "Home", '🏠'),
+        Page("pages/2_Interact.py", "Coding", '🧰'),
+        Page("pages/chat.py", "Chat", '💬'),
+    ]
 )
+

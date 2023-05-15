@@ -3,12 +3,7 @@ from streamlit_tree_select import tree_select
 import streamlit as st
 from streamlit_chat import message
 import requests
-import streamlit.components.v1 as components
-
-
-option = st.selectbox(
-    'Your purpose',
-    ('Creating a new project', 'Continue editing the previous project'))
+import io
 
 
 def gen_tree(li, dic, n):
@@ -24,52 +19,63 @@ def byte2str(bytes):
     if string[-1] == '"':
         string = string[:-1]
     string = string.replace("\\n", "\n").replace("\\0", "\0").replace(
-                "\\'", "\'").replace("\\\\", "\\").replace('\\"',
-                                                           '\"').replace("\\r", "\r")
+        "\\'", "\'").replace("\\\\", "\\").replace('\\"',
+                                                   '\"').replace("\\r", "\r")
     return string
 
 
 dics = ['chat_message']
 strs = ['name', 'token', 'doc_tree']
+objs = ['file']
 for s in strs:
     if s not in st.session_state:
         st.session_state[s] = ''
+for s in objs:
+    if s not in st.session_state:
+        st.session_state[s] = None
 for s in dics:
     if s not in st.session_state:
         st.session_state[s] = {}
 
-if option == 'Creating a new project':
+ROOT = "http://101.43.131.30:8080/project/"
+if st.session_state['token'] == '':
+    option = st.selectbox(
+        'Your purpose',
+        ('Creating a new project', 'Continue editing the previous project'))
 
-    ROOT = "http://101.43.131.30:8080/project/"
+    if option == 'Creating a new project':
 
-    if st.session_state['token'] == '':
-        r = requests.get(ROOT + 'create')
-        token = byte2str(r.content)[10:-2]
-        st.session_state['token'] = token
-        print(token)
-    else:
-        token = st.session_state['token']
-    name = st.text_input('Your project name', '')
-    st.session_state['name'] = name
+        name = st.text_input('Your project name', '')
 
-    def init_project():
-        reply = requests.put(f"{ROOT}init", json={
-            "token": st.session_state['token'],
-            "name": st.session_state['name'],
-        })
-        reply = json.loads(reply.content)['reply']
-        has_scope = reply.find('{')
-        if has_scope != -1:
-            right_scope = reply.rfind("}")
-            reply = reply[has_scope:right_scope + 1]
-            try:
-                reply = json.loads(reply)['reply']
-            except:
-                pass
-        st.session_state['chat_message'][str(len(st.session_state['chat_message']))] = \
-            ('bot', reply)
-    button = st.button('create', on_click=init_project)
 
+        def init_project():
+            if st.session_state['token'] == '':
+                r = requests.get(ROOT + 'create')
+                token = byte2str(r.content)[10:-2]
+                st.session_state['token'] = token
+                print(token)
+            st.session_state['name'] = name
+
+            reply = requests.put(f"{ROOT}init", json={
+                "token": st.session_state['token'],
+                "name": st.session_state['name'],
+            })
+            reply = json.loads(reply.content)['reply']
+            has_scope = reply.find('{')
+            if has_scope != -1:
+                right_scope = reply.rfind("}")
+                reply = reply[has_scope:right_scope + 1]
+                try:
+                    reply = json.loads(reply)['reply']
+                except:
+                    pass
+            st.session_state['chat_message'][str(len(st.session_state['chat_message']))] = \
+                ('bot', reply)
+
+
+        button = st.button('create', on_click=init_project)
+
+else:
     chat_col, file_col = st.columns(2)
 
     with chat_col:
@@ -130,6 +136,7 @@ if option == 'Creating a new project':
     with file_col:
         st.title('Document Tree')
 
+
         def gen_doc_tree(li):
             a = []
             for i in range(len(li)):
@@ -149,7 +156,6 @@ if option == 'Creating a new project':
                         found = False
                         for node in temp:
                             if node['label'] == key:
-                                print(key)
                                 temp = node['children']
                                 found = True
                                 break
@@ -161,7 +167,6 @@ if option == 'Creating a new project':
                                 new_node = {'label': key, 'value': key, 'children': []}
                                 temp.append(new_node)
                                 temp = new_node['children']
-            print(result)
             return result
 
 
@@ -175,11 +180,11 @@ if option == 'Creating a new project':
 
 
         def get_doc_tree():
-            reply = requests.put(f"{ROOT}continue", json={
+            reply = requests.put(f"{ROOT}structure", json={
                 "token": st.session_state['token'],
-                "require": "file structure",
             })
             reply = json.loads(reply.content)['reply']
+            print(reply)
             has_scope = reply.find('{')
             if has_scope != -1:
                 right_scope = reply.rfind("}")
@@ -190,8 +195,26 @@ if option == 'Creating a new project':
                     pass
             st.session_state['doc_tree'] = reply
 
-        button = st.button('get_tree', on_click=get_doc_tree)
-        print(st.session_state['doc_tree'])
-        return_select = tree_select(transform_structure(st.session_state['doc_tree']), only_leaf_checkboxes=True)
-        st.write(return_select)
-# else:
+
+        button = st.button('get_tree', on_click=get_doc_tree, key='tree')
+        return_select = tree_select(transform_structure(st.session_state['doc_tree']), disabled=True,
+                                    only_leaf_checkboxes=True)
+
+
+        def generate_file():
+            reply = requests.put(f"{ROOT}generate?token={st.session_state['token']}")
+            if reply.status_code == 200:
+                rep = requests.get(f"{ROOT}download?token={st.session_state['token']}")
+                file = io.BytesIO(rep.content)
+                st.session_state['file'] = file
+
+
+        button2 = st.button('generate', on_click=generate_file, key='gen')
+        if st.session_state['file']:
+            st.download_button(
+                label="Download data as CSV",
+                data=st.session_state['file'],
+                file_name='project.zip',
+                mime='application/octet-stream',
+            )
+        # st.write(return_select)

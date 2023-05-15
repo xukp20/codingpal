@@ -25,7 +25,7 @@ def byte2str(bytes):
 
 
 dics = ['chat_message']
-strs = ['name', 'token', 'doc_tree']
+strs = ['name', 'token', 'doc_tree', 'generate', 'had_generate']
 objs = ['file']
 for s in strs:
     if s not in st.session_state:
@@ -75,7 +75,7 @@ if st.session_state['token'] == '':
 
         button = st.button('create', on_click=init_project)
 
-else:
+elif st.session_state['generate'] == '':
     chat_col, file_col = st.columns(2)
 
     with chat_col:
@@ -202,19 +202,25 @@ else:
 
 
         def generate_file():
+            st.session_state['generate'] = 'gen'
+
+
+        button2 = st.button('generate', on_click=generate_file, key='gen')
+        # st.write(return_select)
+else:
+    if st.session_state['had_generate'] == '':
+        with st.spinner('Generating···'):
             reply = requests.put(f"{ROOT}generate?token={st.session_state['token']}")
             if reply.status_code == 200:
                 rep = requests.get(f"{ROOT}download?token={st.session_state['token']}")
                 file = io.BytesIO(rep.content)
                 st.session_state['file'] = file
+        st.session_state['had_generate'] = 'gen'
 
-
-        button2 = st.button('generate', on_click=generate_file, key='gen')
-        if st.session_state['file']:
-            st.download_button(
-                label="Download data as CSV",
-                data=st.session_state['file'],
-                file_name='project.zip',
-                mime='application/octet-stream',
-            )
-        # st.write(return_select)
+    if st.session_state['file']:
+        st.download_button(
+            label="Download data as CSV",
+            data=st.session_state['file'],
+            file_name='project.zip',
+            mime='application/octet-stream',
+        )

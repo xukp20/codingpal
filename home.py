@@ -1,5 +1,5 @@
 import streamlit as st
-HELP_LINK = 'https://www.baidu.com'
+HELP_LINK = 'https://codingpal-tutorial.streamlit.app/'
 
 st.set_page_config(
         page_title='CodingPal',

@@ -10,7 +10,7 @@ DOCUMENT_API = f"http://101.43.131.30:8080/document/"
 LANGUAGES = ["Python", "Cpp", "JavaScript", "Rust"]
 FUNCTIONS = ["generate", "completion", "translate", "pseudo2code", "debug"]
 
-HELP_LINK = 'https://www.baidu.com'
+HELP_LINK = 'https://codingpal-tutorial.streamlit.app/'
 
 # tools
 def byte2str(bytes):

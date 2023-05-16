@@ -4,7 +4,7 @@ import streamlit as st
 from streamlit_chat import message
 import requests
 import io
-HELP_LINK = 'https://www.baidu.com'
+HELP_LINK = 'https://codingpal-tutorial.streamlit.app/'
 st.set_page_config(
         page_title='Chat',
         page_icon='💬',

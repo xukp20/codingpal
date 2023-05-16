@@ -10,6 +10,8 @@ DOCUMENT_API = f"http://101.43.131.30:8080/document/"
 LANGUAGES = ["Python", "Cpp", "JavaScript", "Rust"]
 FUNCTIONS = ["generate", "completion", "translate", "pseudo2code", "debug"]
 
+HELP_LINK = 'https://www.baidu.com'
+
 # tools
 def byte2str(bytes):
             string = str(bytes, encoding="utf8")
@@ -32,6 +34,10 @@ def main_page():
         page_icon='🧰',
         layout='wide',
         initial_sidebar_state='collapsed',
+        menu_items={
+            'About': '2023 Spring by Rookie Team.',
+            'Get help': '{}'.format(HELP_LINK)
+        }
     )
     with st.expander('help'):
         editor_help, text_help, search_help = st.tabs(("Editor", "Text", "Search"))

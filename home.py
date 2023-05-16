@@ -1,4 +1,16 @@
 import streamlit as st
+HELP_LINK = 'https://www.baidu.com'
+
+st.set_page_config(
+        page_title='CodingPal',
+        page_icon='🏠',
+        initial_sidebar_state='expanded',
+        menu_items={
+            'About': '2023 Spring by Rookie Team.',
+            'Get help': '{}'.format(HELP_LINK)
+        }
+    )
+
 lang = st.radio("Language", ('English', '中文'), horizontal=True, label_visibility='collapsed')
 
 
@@ -46,11 +58,11 @@ if lang == 'English':
     - Start chatting with the bot
     - Generate the project and download it
 
-    If you need more specific help with examples, see [here]()
+    If you need more specific help with examples, see [here]({}), or click the memu button on the right top of any page to choose 'Get help'
 
     ### ✨ About
     Developed by Rookie team 2023.
-    """)
+    """.format(HELP_LINK))
 else:
     st.title("欢迎来到 CodingPal")
     st.balloons()
@@ -94,10 +106,10 @@ else:
     - 与机器人聊天
     - 生成项目并下载
 
-    如果您需要更多具体的帮助示例，请参见[这里]()
+    如果您需要更多具体的帮助示例，请参见[这里]({})，或者点击任一页面右上角菜单中的Get help选项。
 
     ### ✨ 关于
     Rookie 2023 团队开发。
 
     另外，中文文档由ChatGPT生成🤣。
-    """)
+    """.format(HELP_LINK))

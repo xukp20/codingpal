@@ -4,7 +4,17 @@ import streamlit as st
 from streamlit_chat import message
 import requests
 import io
-
+HELP_LINK = 'https://www.baidu.com'
+st.set_page_config(
+        page_title='Chat',
+        page_icon='💬',
+        layout='centered',
+        initial_sidebar_state='collapsed',
+        menu_items={
+            'About': '2023 Spring by Rookie Team.',
+            'Get help': '{}'.format(HELP_LINK)
+        }
+    )
 
 def gen_tree(li, dic, n):
     for k, v in dic.items():

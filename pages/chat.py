@@ -232,6 +232,7 @@ else:
         st.session_state['had_generate'] = 'gen'
 
     if st.session_state['file']:
+        st.caption('Generate done')
         _, col2, _ = st.columns([1, 2, 1])
         with col2:
             st.markdown("### Your project is ready!")

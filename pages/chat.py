@@ -161,6 +161,7 @@ elif st.session_state['generate'] == '':
 
         def transform_structure(data):
             result = []
+            i = 0
             for item in data:
                 keys = item.split('/')
                 temp = result
@@ -173,11 +174,13 @@ elif st.session_state['generate'] == '':
                                 found = True
                                 break
                         if not found:
-                            if key[-3:] == '.py':
-                                new_node = {'label': key, 'value': key}
+                            if '.' in key:
+                                new_node = {'label': key, 'value': key + str(i)}
+                                i += 1
                                 temp.append(new_node)
                             else:
-                                new_node = {'label': key, 'value': key, 'children': []}
+                                new_node = {'label': key, 'value': key + str(i), 'children': []}
+                                i += 1
                                 temp.append(new_node)
                                 temp = new_node['children']
             return result

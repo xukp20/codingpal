@@ -1,6 +1,8 @@
 import streamlit as st
 from st_pages import Page, show_pages, add_page_title
 
+# in fact, you can see this key in the source code by simply looking at the github repo
+# haha
 KEY = 'Rookie'
 if 'invite_key' not in st.session_state:
     st.session_state['invite_key'] = ''

@@ -237,6 +237,9 @@ def editor_page():
         elif option == "Debug":
             st.session_state.editor_option = "debug"
             st.session_state.editor_got_result = False
+            st.session_state.editor_params = {
+                "code": code["text"],
+            }
 
         elif option == "ToPseudo":
             st.session_state.editor_option = "code2pseudo"

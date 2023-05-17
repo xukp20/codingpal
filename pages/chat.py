@@ -8,13 +8,34 @@ HELP_LINK = 'https://codingpal-tutorial.streamlit.app/'
 st.set_page_config(
         page_title='Chat',
         page_icon='💬',
-        layout='centered',
+        layout='wide',
         initial_sidebar_state='collapsed',
         menu_items={
             'About': '2023 Spring by Rookie Team.',
             'Get help': '{}'.format(HELP_LINK)
         }
     )
+
+# tools
+def message_block(msg, is_user):
+            if is_user:                
+                st.markdown(f'<p style="background-color:#F7F3F9; margin:2px; margin-inline: 3px; padding: 10px;">  👨 {msg}</p>', unsafe_allow_html=True)
+            else:
+                st.markdown(f'<p style="background-color:#f3f9f3; margin:2px; margin-inline: 3px; padding: 10px;">  ⚙️ {msg}</p>', unsafe_allow_html=True)
+
+def chat_block(messages):
+    history = messages[:-2]
+    new = messages[-2:]
+    # reverse the history
+    history.reverse()
+    new.reverse()
+    for msg in new:
+         message_block(msg[1], msg[0] == 'user')
+
+    st.divider()
+    with st.expander('Show History'):
+        for msg in history:
+            message_block(msg[1], msg[0] == 'user')
 
 def gen_tree(li, dic, n):
     for k, v in dic.items():
@@ -123,25 +144,7 @@ elif st.session_state['generate'] == '':
                 ('bot', reply)
         st.session_state["temp"] = ""
 
-        for key, value in st.session_state['chat_message'].items():
-            if value[0] == 'user':
-                message(value[1], is_user=True, key=key)
-            else:
-                message(value[1], key=key)
-        # html = """
-        # <div>
-        #   %s
-        # </div>
-        # """
-        #
-        # for key, value in st.session_state['chat_message'].items():
-        #     if value[0] == 'user':
-        #         message_html = f"<p class='user-message'>{value[1]}</p>"
-        #     else:
-        #         message_html = f"<p class='bot-message'>{value[1]}</p>"
-        #     html += message_html
-        #
-        # components.html(html, height=200, scrolling=True)
+        chat_block(list(st.session_state['chat_message'].values()))
 
     with file_col:
         st.title('Document Tree')
@@ -206,7 +209,7 @@ elif st.session_state['generate'] == '':
             st.session_state['doc_tree'] = reply
 
 
-        button = st.button('get_tree', on_click=get_doc_tree, key='tree')
+        button = st.button('See File Structure', on_click=get_doc_tree, key='tree')
         return_select = tree_select(transform_structure(st.session_state['doc_tree']), disabled=True,
                                     only_leaf_checkboxes=True)
 
@@ -215,10 +218,11 @@ elif st.session_state['generate'] == '':
             st.session_state['generate'] = 'gen'
 
 
-        button2 = st.button('generate', on_click=generate_file, key='gen')
+        button2 = st.button('Generate Zip', on_click=generate_file, key='gen')
         # st.write(return_select)
 else:
     if st.session_state['had_generate'] == '':
+        st.caption('Because the restriction of OpenAI API, this may take a while')
         with st.spinner('Generating···'):
             reply = requests.put(f"{ROOT}generate?token={st.session_state['token']}")
             if reply.status_code == 200:
@@ -228,9 +232,24 @@ else:
         st.session_state['had_generate'] = 'gen'
 
     if st.session_state['file']:
-        st.download_button(
-            label="Download data as CSV",
-            data=st.session_state['file'],
-            file_name='project.zip',
-            mime='application/octet-stream',
-        )
+        _, col2, _ = st.columns([1, 2, 1])
+        with col2:
+            st.markdown("### Your project is ready!")
+            st.download_button(
+                label="Download Zipfile",
+                data=st.session_state['file'],
+                file_name='project.zip',
+                mime='application/octet-stream',
+            )
+
+            # return to continue edit if not satisfied
+            st.caption('Not satisfied? Click the button below to continue edit')
+            
+            def reset():
+                st.session_state['generate'] = ''
+                st.session_state['had_generate'] = ''
+                st.session_state['file'] = None
+            button = st.button('Return', on_click=reset)
+
+
+

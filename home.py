@@ -17,7 +17,6 @@ lang = st.radio("Language", ('English', '中文'), horizontal=True, label_visibi
 
 if lang == 'English':
     st.title("Welcome to CodingPal")
-    st.balloons()
     st.markdown("""
     **CodingPal is a programming tool that helps you write code, fix bugs or even generate a project from scratch.**
     
@@ -65,7 +64,6 @@ if lang == 'English':
     """.format(HELP_LINK))
 else:
     st.title("欢迎来到 CodingPal")
-    st.balloons()
     st.markdown("""
     **CodingPal 是一个编程工具，可以帮助你编写代码，修复错误，甚至从头开始生成项目。**
 

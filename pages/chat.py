@@ -4,24 +4,31 @@ import streamlit as st
 from streamlit_chat import message
 import requests
 import io
+
 HELP_LINK = 'https://codingpal-tutorial.streamlit.app/'
 st.set_page_config(
-        page_title='Chat',
-        page_icon='💬',
-        layout='wide',
-        initial_sidebar_state='collapsed',
-        menu_items={
-            'About': '2023 Spring by Rookie Team.',
-            'Get help': '{}'.format(HELP_LINK)
-        }
-    )
+    page_title='Chat',
+    page_icon='💬',
+    layout='wide',
+    initial_sidebar_state='collapsed',
+    menu_items={
+        'About': '2023 Spring by Rookie Team.',
+        'Get help': '{}'.format(HELP_LINK)
+    }
+)
+
 
 # tools
 def message_block(msg, is_user):
-            if is_user:                
-                st.markdown(f'<p style="background-color:#F7F3F9; margin:2px; margin-inline: 3px; padding: 10px;">  👨 {msg}</p>', unsafe_allow_html=True)
-            else:
-                st.markdown(f'<p style="background-color:#f3f9f3; margin:2px; margin-inline: 3px; padding: 10px;">  ⚙️ {msg}</p>', unsafe_allow_html=True)
+    if is_user:
+        st.markdown(
+            f'<p style="background-color:#F7F3F9; margin:2px; margin-inline: 3px; padding: 10px;">  👨 {msg}</p>',
+            unsafe_allow_html=True)
+    else:
+        st.markdown(
+            f'<p style="background-color:#f3f9f3; margin:2px; margin-inline: 3px; padding: 10px;">  ⚙️ {msg}</p>',
+            unsafe_allow_html=True)
+
 
 def chat_block(messages):
     history = messages[:-2]
@@ -30,17 +37,46 @@ def chat_block(messages):
     history.reverse()
     new.reverse()
     for msg in new:
-         message_block(msg[1], msg[0] == 'user')
+        print(msg[1])
+        message_block(msg[1], msg[0] == 'user')
 
     st.divider()
     with st.expander('Show History'):
         for msg in history:
             message_block(msg[1], msg[0] == 'user')
 
+
 def gen_tree(li, dic, n):
     for k, v in dic.items():
         li.append('    |' * n + '-' * 4 + k + '\n')
         gen_tree(li, v, n + 1)
+
+
+def transform_structure(data):
+    result = []
+    i = 0
+    for item in data:
+        keys = item.split('/')
+        temp = result
+        for key in keys:
+            if key != '':
+                found = False
+                for node in temp:
+                    if node['label'] == key:
+                        temp = node['children']
+                        found = True
+                        break
+                if not found:
+                    if '.' in key:
+                        new_node = {'label': key, 'value': key + str(i)}
+                        i += 1
+                        temp.append(new_node)
+                    else:
+                        new_node = {'label': key, 'value': key + str(i), 'children': []}
+                        i += 1
+                        temp.append(new_node)
+                        temp = new_node['children']
+    return result
 
 
 def byte2str(bytes):
@@ -55,8 +91,8 @@ def byte2str(bytes):
     return string
 
 
-dics = ['chat_message']
-strs = ['name', 'token', 'doc_tree', 'generate', 'had_generate']
+dics = ['chat_message', 'all_files']
+strs = ['name', 'token', 'doc_tree', 'generate', 'had_generate', 'now_open_file']
 objs = ['file']
 for s in strs:
     if s not in st.session_state:
@@ -67,8 +103,10 @@ for s in objs:
 for s in dics:
     if s not in st.session_state:
         st.session_state[s] = {}
+if 'confirm_tree' not in st.session_state:
+    st.session_state['confirm_tree'] = False
 
-ROOT = "http://101.43.131.30:8080/project/"
+ROOT = "http://101.43.131.30:8080/structure/"
 if st.session_state['token'] == '':
     option = st.selectbox(
         'Your purpose',
@@ -92,21 +130,14 @@ if st.session_state['token'] == '':
                 "name": st.session_state['name'],
             })
             reply = json.loads(reply.content)['reply']
-            has_scope = reply.find('{')
-            if has_scope != -1:
-                right_scope = reply.rfind("}")
-                reply = reply[has_scope:right_scope + 1]
-                try:
-                    reply = json.loads(reply)['reply']
-                except:
-                    pass
+
             st.session_state['chat_message'][str(len(st.session_state['chat_message']))] = \
                 ('bot', reply)
 
 
         button = st.button('create', on_click=init_project)
 
-elif st.session_state['generate'] == '':
+elif not st.session_state['confirm_tree']:
     chat_col, file_col = st.columns(2)
 
     with chat_col:
@@ -131,15 +162,12 @@ elif st.session_state['generate'] == '':
                 "token": st.session_state['token'],
                 "require": st.session_state["temp"],
             })
+
+            try:
+                st.session_state['doc_tree'] = json.loads(reply.content)['structure']
+            except:
+                pass
             reply = json.loads(reply.content)['reply']
-            has_scope = reply.find('{')
-            if has_scope != -1:
-                right_scope = reply.rfind("}")
-                reply = reply[has_scope:right_scope + 1]
-                try:
-                    reply = json.loads(reply)['reply']
-                except:
-                    pass
             st.session_state['chat_message'][str(len(st.session_state['chat_message']))] = \
                 ('bot', reply)
         st.session_state["temp"] = ""
@@ -159,70 +187,56 @@ elif st.session_state['generate'] == '':
             return a
 
 
-        def transform_structure(data):
-            result = []
-            i = 0
-            for item in data:
-                keys = item.split('/')
-                temp = result
-                for key in keys:
-                    if key != '':
-                        found = False
-                        for node in temp:
-                            if node['label'] == key:
-                                temp = node['children']
-                                found = True
-                                break
-                        if not found:
-                            if '.' in key:
-                                new_node = {'label': key, 'value': key + str(i)}
-                                i += 1
-                                temp.append(new_node)
-                            else:
-                                new_node = {'label': key, 'value': key + str(i), 'children': []}
-                                i += 1
-                                temp.append(new_node)
-                                temp = new_node['children']
-            return result
-
-
-        def remove_empty_children(node):
-            if 'children' in node:
-                if len(node['children']) == 0:
-                    node.pop('children')
-                else:
-                    for child in list(node['children']):
-                        remove_empty_children(child)
-
-
         def get_doc_tree():
             reply = requests.put(f"{ROOT}structure", json={
                 "token": st.session_state['token'],
             })
-            reply = json.loads(reply.content)['reply']
-            print(reply)
-            has_scope = reply.find('{')
-            if has_scope != -1:
-                right_scope = reply.rfind("}")
-                reply = reply[has_scope:right_scope + 1]
-                try:
-                    reply = json.loads(reply)['structure']
-                except:
-                    pass
-            st.session_state['doc_tree'] = reply
 
+            reply = json.loads(reply.content)['structure']
+            st.session_state['doc_tree'] = reply
 
         button = st.button('See File Structure', on_click=get_doc_tree, key='tree')
         return_select = tree_select(transform_structure(st.session_state['doc_tree']), disabled=True,
-                                    only_leaf_checkboxes=True)
+                                only_leaf_checkboxes=True)
 
 
-        def generate_file():
-            st.session_state['generate'] = 'gen'
+        def confirm_tree():
+            print('here')
+            st.session_state['confirm_tree'] = True
+            for i in st.session_state['doc_tree']:
+                st.session_state['all_files'][i] = {}
+                st.session_state['all_files'][i]['content'] = ''
+                st.session_state['all_files'][i]['message'] = {}
 
 
-        button2 = st.button('Generate Zip', on_click=generate_file, key='gen')
-        # st.write(return_select)
+        button2 = st.button('Confirm Tree', on_click=confirm_tree, key='confirm')
+    # st.write(return_select)
+elif st.session_state['generate'] == '':
+
+    file_col, chat_col = st.columns(2)
+
+    with file_col:
+        file_tree = tree_select(transform_structure(st.session_state['doc_tree']), disabled=True,
+                                only_leaf_checkboxes=True)
+
+
+    def generate_file():
+        st.session_state['generate'] = 'gen'
+
+
+    button2 = st.button('Generate Zip', on_click=generate_file, key='gen')
+
+    with chat_col:
+        for i in st.session_state['all_files']:
+            with st.expander(i):
+                def modify_file():
+                    st.session_state['now_open_file'] = i
+
+
+                button = st.button('modify file', on_click=modify_file, key=i)
+                st.session_state['now_open_file'] = i
+                st.write(st.session_state['all_files'][i])
+
 else:
     if st.session_state['had_generate'] == '':
         st.caption('Because the restriction of OpenAI API, this may take a while')
@@ -246,14 +260,14 @@ else:
                 mime='application/octet-stream',
             )
 
-            # return to continue edit if not satisfied
-            st.caption('Not satisfied? Click the button below to continue edit')
-            
-            def reset():
-                st.session_state['generate'] = ''
-                st.session_state['had_generate'] = ''
-                st.session_state['file'] = None
-            button = st.button('Return', on_click=reset)
+        # return to continue edit if not satisfied
+        st.caption('Not satisfied? Click the button below to continue edit')
 
 
+        def reset():
+            st.session_state['generate'] = ''
+            st.session_state['had_generate'] = ''
+            st.session_state['file'] = None
 
+
+        button = st.button('Return', on_click=reset)

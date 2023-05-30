@@ -354,20 +354,20 @@ else:
             os.makedirs(os.path.join(DIR_BASE, st.session_state['token']))
         base = os.path.join(DIR_BASE, token) + '/'
         with zipfile.ZipFile(os.path.join(DIR_BASE, token + ".zip"), "w") as zipf:
-            for root, dirs, files in os.walk(os.path.join("data", token)):
-                # skip the token folder
-                if root.split("/")[-1] == token:
-                    continue
+            # files are in st.session_state['all_files']
+            for path in st.session_state['all_files']:
+                zipf.writestr(path, st.session_state['all_files'][path]['content'])
+        zipf.close()
+        st.session_state['file'] = io.BytesIO(open(os.path.join(DIR_BASE, token + ".zip"), 'rb').read())
 
-                for file in files:
-                    zipf.write(os.path.join(root, file), os.path.join(root.removeprefix(base), file))
-
-    download_button = st.download_button(
-            label="Download Zipfile",
-            data=st.session_state['file'],
-            file_name='project.zip',
-            mime='application/octet-stream',
-        )
+    generate_button = st.button('Generate', on_click=generate_file)
+    if st.session_state['file']:
+        download_button = st.download_button(
+                label="Download Zipfile",
+                data=st.session_state['file'] if st.session_state['file'] else None,
+                file_name='project.zip',
+                mime='application/octet-stream',
+            )
 
     for i, path in enumerate(st.session_state['all_files']):
         with st.expander(path):

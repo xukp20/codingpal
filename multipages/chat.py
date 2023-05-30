@@ -3,6 +3,7 @@ from streamlit_tree_select import tree_select
 import streamlit as st
 from streamlit_chat import message
 import requests
+from code_editor import code_editor
 import io
 
 HELP_LINK = 'https://codingpal-tutorial.streamlit.app/'
@@ -37,7 +38,6 @@ def chat_block(messages):
     history.reverse()
     new.reverse()
     for msg in new:
-        print(msg[1])
         message_block(msg[1], msg[0] == 'user')
 
     st.divider()
@@ -53,7 +53,6 @@ def chat_block_nested(messages, i):
     history.reverse()
     new.reverse()
     for msg in new:
-        print(msg[1])
         message_block(msg[1], msg[0] == 'user')
 
     st.divider()
@@ -123,6 +122,7 @@ if 'confirm_tree' not in st.session_state:
     st.session_state['confirm_tree'] = False
 
 ROOT = "http://101.43.131.30:8080/structure/"
+ROOT1 = "http://101.43.131.30:8080/file/"
 if st.session_state['token'] == '':
     option = st.selectbox(
         'Your purpose',
@@ -138,7 +138,6 @@ if st.session_state['token'] == '':
                 r = requests.get(ROOT + 'create')
                 token = byte2str(r.content)[10:-2]
                 st.session_state['token'] = token
-                print(token)
             st.session_state['name'] = name
 
             reply = requests.put(f"{ROOT}init", json={
@@ -211,18 +210,20 @@ elif not st.session_state['confirm_tree']:
             reply = json.loads(reply.content)['structure']
             st.session_state['doc_tree'] = reply
 
+
         button = st.button('See File Structure', on_click=get_doc_tree, key='tree')
         return_select = tree_select(transform_structure(st.session_state['doc_tree']), disabled=True,
-                                only_leaf_checkboxes=True)
+                                    only_leaf_checkboxes=True)
 
 
         def confirm_tree():
-            print('here')
             st.session_state['confirm_tree'] = True
             for i in st.session_state['doc_tree']:
                 st.session_state['all_files'][i] = {}
                 st.session_state['all_files'][i]['content'] = ''
                 st.session_state['all_files'][i]['message'] = {}
+                st.session_state['all_files'][i]['had_init'] = False
+                st.session_state['all_files'][i]['chat_msg'] = ''
 
 
         button2 = st.button('Confirm Tree', on_click=confirm_tree, key='confirm')
@@ -245,57 +246,133 @@ elif st.session_state['generate'] == '':
     with chat_col:
         for i, path in enumerate(st.session_state['all_files']):
             with st.expander(path):
-                def modify_file():
-                    st.session_state['now_open_file'] = path
+                def init_file(path):
+                    reply = requests.put(f"{ROOT1}init", json={
+                        "token": st.session_state['token'],
+                        "path": path,
+                    })
+                    st.session_state['all_files'][path]['message'][
+                        str(len(st.session_state['all_files'][path]['message']))] = (
+                        'bot', json.loads(reply.content)['reply'])
+                    st.session_state['all_files'][path]['had_init'] = True
 
 
-                button = st.button('modify file', on_click=modify_file, key=path)
+                def ok_file():
+                    return 0
+
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    button1 = st.button('init', on_click=init_file, args=[path], key=path + 'init')
+                with col2:
+                    button2 = st.button('OK', on_click=ok_file, key=path + 'OK')
+
                 st.session_state['now_open_file'] = path
-                # st.write(st.session_state['all_files'][i])
-                st.write(st.session_state['doc_tree'][i])
-                st.session_state['all_files'][path]['content'] = '1233323'
-                st.write(st.session_state['all_files'][path]['content'])
-                st.session_state['all_files'][path]['message'] = {
-                    '1': ('user', 'hello'),
-                    '2': ('bot', 'hi'),
-                    '3': ('user', 'hello'),
-                    '4': ('bot', 'hi'),
-                    '5': ('user', 'hello'),
-                    '6': ('bot', 'hi'),
-                }
+                if st.session_state['all_files'][path]['had_init']:
+                    def clear_text(path):
+                        st.session_state['all_files'][path]['chat_msg'] = st.session_state["requires" + path]
+                        st.session_state["requires" + path] = ""
+
+
+                    require = st.text_input('Enter your requirements', key='requires' + path, on_change=clear_text,
+                                            args=[path])
+
+                    if st.session_state['all_files'][path]['chat_msg'] != '':
+                        st.session_state['all_files'][path]['message'][
+                            str(len(st.session_state['all_files'][path]['message']))] = \
+                            ('user', st.session_state['all_files'][path]['chat_msg'])
+
+                        reply = requests.put(f"{ROOT1}continue", json={
+                            "token": st.session_state['token'],
+                            "path": path,
+                            "require": st.session_state['all_files'][path]['chat_msg'],
+                        })
+
+                        try:
+                            st.session_state['all_files'][path]['content'] = json.loads(reply.content)['content']
+                        except:
+                            pass
+                        reply = json.loads(reply.content)['reply']
+                        st.session_state['all_files'][path]['message'][
+                            str(len(st.session_state['all_files'][path]['message']))] = \
+                            ('bot', reply)
+                    st.session_state['all_files'][path]['chat_msg'] = ''
+
+                st.code(st.session_state['all_files'][path]['content'])
+                # st.session_state['all_files'][path]['message'] = {
+                #     '1': ('user', 'hello'),
+                #     '2': ('bot', 'hi'),
+                #     '3': ('user', 'hello'),
+                #     '4': ('bot', 'hi'),
+                #     '5': ('user', 'hello'),
+                #     '6': ('bot', 'hi'),
+                # }
                 chat_block_nested(list(st.session_state['all_files'][path]['message'].values()), i)
 
 else:
-    if st.session_state['had_generate'] == '':
-        st.caption('Because the restriction of OpenAI API, this may take a while')
-        with st.spinner('Generating···'):
-            reply = requests.put(f"{ROOT}generate?token={st.session_state['token']}")
-            if reply.status_code == 200:
-                rep = requests.get(f"{ROOT}download?token={st.session_state['token']}")
-                file = io.BytesIO(rep.content)
-                st.session_state['file'] = file
-        st.session_state['had_generate'] = 'gen'
+    # if st.session_state['had_generate'] == '':
+    #     st.caption('Because the restriction of OpenAI API, this may take a while')
+    #     with st.spinner('Generating···'):
+    #         reply = requests.put(f"{ROOT}generate?token={st.session_state['token']}")
+    #         if reply.status_code == 200:
+    #             rep = requests.get(f"{ROOT}download?token={st.session_state['token']}")
+    #             file = io.BytesIO(rep.content)
+    #             st.session_state['file'] = file
+    #     st.session_state['had_generate'] = 'gen'
+    #
+    # if st.session_state['file']:
+    #     st.caption('Generate done')
+    #     _, col2, _ = st.columns([1, 2, 1])
+    #     with col2:
+    #         st.markdown("### Your project is ready!")
+    #         st.download_button(
+    #             label="Download Zipfile",
+    #             data=st.session_state['file'],
+    #             file_name='project.zip',
+    #             mime='application/octet-stream',
+    #         )
+    #
+    #     # return to continue edit if not satisfied
+    #     st.caption('Not satisfied? Click the button below to continue edit')
+    #
+    def reset():
+        st.session_state['generate'] = ''
+        st.session_state['had_generate'] = ''
+        st.session_state['file'] = None
 
-    if st.session_state['file']:
-        st.caption('Generate done')
-        _, col2, _ = st.columns([1, 2, 1])
-        with col2:
-            st.markdown("### Your project is ready!")
-            st.download_button(
-                label="Download Zipfile",
-                data=st.session_state['file'],
-                file_name='project.zip',
-                mime='application/octet-stream',
-            )
 
-        # return to continue edit if not satisfied
-        st.caption('Not satisfied? Click the button below to continue edit')
+    button = st.button('Return', on_click=reset)
 
+    # generate file after clicking
+    def generate_file():
+        import os
+        import zipfile
+        DIR_BASE = 'data'
+        token = st.session_state['token']
+        if not os.path.exists(os.path.join(DIR_BASE, st.session_state['token'])):
+            os.makedirs(os.path.join(DIR_BASE, st.session_state['token']))
+        base = os.path.join(DIR_BASE, token) + '/'
+        with zipfile.ZipFile(os.path.join(DIR_BASE, token + ".zip"), "w") as zipf:
+            for root, dirs, files in os.walk(os.path.join("data", token)):
+                # skip the token folder
+                if root.split("/")[-1] == token:
+                    continue
 
-        def reset():
-            st.session_state['generate'] = ''
-            st.session_state['had_generate'] = ''
-            st.session_state['file'] = None
+                for file in files:
+                    zipf.write(os.path.join(root, file), os.path.join(root.removeprefix(base), file))
 
+    download_button = st.download_button(
+            label="Download Zipfile",
+            data=st.session_state['file'],
+            file_name='project.zip',
+            mime='application/octet-stream',
+        )
 
-        button = st.button('Return', on_click=reset)
+    for i, path in enumerate(st.session_state['all_files']):
+        with st.expander(path):
+            code = code_editor(st.session_state['all_files'][path]['content'], key='code_editor' + path)
+            if code['text'] == '':
+                st.warning('please press Ctrl + Enter to submit your code')
+            else:
+                st.session_state['all_files'][path]['content'] = code['text']

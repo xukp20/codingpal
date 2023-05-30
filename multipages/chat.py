@@ -46,6 +46,22 @@ def chat_block(messages):
             message_block(msg[1], msg[0] == 'user')
 
 
+def chat_block_nested(messages, i):
+    history = messages[:-2]
+    new = messages[-2:]
+    # reverse the history
+    history.reverse()
+    new.reverse()
+    for msg in new:
+        print(msg[1])
+        message_block(msg[1], msg[0] == 'user')
+
+    st.divider()
+    if st.checkbox('Show History', key='checkbox' + str(i)):
+        for msg in history:
+            message_block(msg[1], msg[0] == 'user')
+
+
 def gen_tree(li, dic, n):
     for k, v in dic.items():
         li.append('    |' * n + '-' * 4 + k + '\n')
@@ -188,7 +204,7 @@ elif not st.session_state['confirm_tree']:
 
 
         def get_doc_tree():
-            reply = requests.put(f"{ROOT}structure", json={
+            reply = requests.put(f"{ROOT}get", json={
                 "token": st.session_state['token'],
             })
 
@@ -227,15 +243,27 @@ elif st.session_state['generate'] == '':
     button2 = st.button('Generate Zip', on_click=generate_file, key='gen')
 
     with chat_col:
-        for i in st.session_state['all_files']:
-            with st.expander(i):
+        for i, path in enumerate(st.session_state['all_files']):
+            with st.expander(path):
                 def modify_file():
-                    st.session_state['now_open_file'] = i
+                    st.session_state['now_open_file'] = path
 
 
-                button = st.button('modify file', on_click=modify_file, key=i)
-                st.session_state['now_open_file'] = i
-                st.write(st.session_state['all_files'][i])
+                button = st.button('modify file', on_click=modify_file, key=path)
+                st.session_state['now_open_file'] = path
+                # st.write(st.session_state['all_files'][i])
+                st.write(st.session_state['doc_tree'][i])
+                st.session_state['all_files'][path]['content'] = '1233323'
+                st.write(st.session_state['all_files'][path]['content'])
+                st.session_state['all_files'][path]['message'] = {
+                    '1': ('user', 'hello'),
+                    '2': ('bot', 'hi'),
+                    '3': ('user', 'hello'),
+                    '4': ('bot', 'hi'),
+                    '5': ('user', 'hello'),
+                    '6': ('bot', 'hi'),
+                }
+                chat_block_nested(list(st.session_state['all_files'][path]['message'].values()), i)
 
 else:
     if st.session_state['had_generate'] == '':

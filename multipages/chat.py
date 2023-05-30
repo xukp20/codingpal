@@ -352,7 +352,6 @@ else:
         token = st.session_state['token']
         if not os.path.exists(os.path.join(DIR_BASE, st.session_state['token'])):
             os.makedirs(os.path.join(DIR_BASE, st.session_state['token']))
-        base = os.path.join(DIR_BASE, token) + '/'
         with zipfile.ZipFile(os.path.join(DIR_BASE, token + ".zip"), "w") as zipf:
             # files are in st.session_state['all_files']
             for path in st.session_state['all_files']:
@@ -360,14 +359,28 @@ else:
         zipf.close()
         st.session_state['file'] = io.BytesIO(open(os.path.join(DIR_BASE, token + ".zip"), 'rb').read())
 
-    generate_button = st.button('Generate', on_click=generate_file)
+    def delete_file():
+        import os
+        import zipfile
+        DIR_BASE = 'data'
+        token = st.session_state['token']
+        if os.path.exists(os.path.join(DIR_BASE, token)):
+            os.removedirs(os.path.join(DIR_BASE, token))
+        if os.path.exists(os.path.join(DIR_BASE, token + ".zip")):
+            os.remove(os.path.join(DIR_BASE, token + ".zip"))
+        st.session_state['file'] = None
+
     if st.session_state['file']:
         download_button = st.download_button(
                 label="Download Zipfile",
                 data=st.session_state['file'] if st.session_state['file'] else None,
                 file_name='project.zip',
                 mime='application/octet-stream',
+                on_click=delete_file
             )
+    else:
+        generate_button = st.button('Generate', on_click=generate_file)
+
 
     for i, path in enumerate(st.session_state['all_files']):
         with st.expander(path):

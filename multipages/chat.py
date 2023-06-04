@@ -158,6 +158,11 @@ if st.session_state['token'] == '':
 
 
 elif not st.session_state['confirm_tree']:
+    progress_text = "Set your doc tree."
+    st.progress(25, text=progress_text)
+
+    st.write('\n \n \n \n \n')
+
     chat_col, file_col = st.columns([2, 1.2], gap='large')
 
     with chat_col:
@@ -252,6 +257,10 @@ elif not st.session_state['confirm_tree']:
         button2 = st.button('Confirm Tree', on_click=confirm_tree, key='confirm')
     # st.write(return_select)
 elif st.session_state['generate'] == '':
+    progress_text = "Get file content."
+    st.progress(50, text=progress_text)
+
+    st.write('\n \n \n \n \n')
 
     file_col, chat_col = st.columns(2)
 
@@ -370,12 +379,19 @@ else:
     #     # return to continue edit if not satisfied
     #     st.caption('Not satisfied? Click the button below to continue edit')
     #
+    if 'progress_per' not in st.session_state or st.session_state['progress_per'] is None:
+        st.session_state['progress_per'] = 75
+    progress_text = "Edit by yourself" if st.session_state['progress_per'] == 75 else "Download Right Now!"
+    st.progress(st.session_state['progress_per'], text=progress_text)
+
+    st.write('\n \n \n \n \n')
     col1, col, col2 = st.columns([1.5, 13, 2])
 
     def reset():
         st.session_state['generate'] = ''
         st.session_state['had_generate'] = ''
         st.session_state['file'] = None
+        st.session_state['progress_per'] = None
 
     with col1:
         button = st.button('Return', on_click=reset)
@@ -394,6 +410,7 @@ else:
                 zipf.writestr(path, st.session_state['all_files'][path]['content'])
         zipf.close()
         st.session_state['file'] = io.BytesIO(open(os.path.join(DIR_BASE, token + ".zip"), 'rb').read())
+        st.session_state['progress_per'] = 100
 
     def delete_file():
         import os
@@ -405,6 +422,7 @@ else:
         if os.path.exists(os.path.join(DIR_BASE, token + ".zip")):
             os.remove(os.path.join(DIR_BASE, token + ".zip"))
         st.session_state['file'] = None
+        st.session_state['progress_per'] = 75
 
     with col2:
         if st.session_state['file']:

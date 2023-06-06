@@ -193,8 +193,8 @@ elif not st.session_state['confirm_tree']:
 
             try:
                 st.session_state['doc_tree'] = []
-                reply = json.loads(reply.content)['structure']
-                for file in reply:
+                temp1 = json.loads(reply.content)['structure']
+                for file in temp1:
                     if file[-1] != '/':
                         st.session_state['doc_tree'].append(file)
             except:

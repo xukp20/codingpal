@@ -128,6 +128,8 @@ for s in dics:
         st.session_state[s] = {}
 if 'confirm_tree' not in st.session_state:
     st.session_state['confirm_tree'] = False
+if 'doc_tree' not in st.session_state:
+    st.session_state['doc_tree'] = []
 
 ROOT = "http://101.43.131.30:8080/structure/"
 ROOT1 = "http://101.43.131.30:8080/file/"
@@ -190,7 +192,11 @@ elif not st.session_state['confirm_tree']:
             })
 
             try:
-                st.session_state['doc_tree'] = json.loads(reply.content)['structure']
+                st.session_state['doc_tree'] = []
+                reply = json.loads(reply.content)['structure']
+                for file in reply:
+                    if file[-1] != '/':
+                        st.session_state['doc_tree'].append(file)
             except:
                 pass
             reply = json.loads(reply.content)['reply']
@@ -201,7 +207,7 @@ elif not st.session_state['confirm_tree']:
         chat_block(list(st.session_state['chat_message'].values()))
 
     with file_col:
-        st.title('file structure :evergreen_tree:')
+        st.title('File Structure :evergreen_tree:')
 
 
         def gen_doc_tree(li):
@@ -219,7 +225,10 @@ elif not st.session_state['confirm_tree']:
             })
 
             reply = json.loads(reply.content)['structure']
-            st.session_state['doc_tree'] = reply
+            st.session_state['doc_tree'] = []
+            for file in reply:
+                if file[-1] != '/':
+                    st.session_state['doc_tree'].append(file)
 
 
         def generate_tree(childs):
@@ -265,8 +274,7 @@ elif st.session_state['generate'] == '':
     file_col, chat_col = st.columns(2)
 
     with file_col:
-        st.title('file structure :evergreen_tree:')
-
+        st.title('File Structure :evergreen_tree:')
         st.markdown(generate_markdown_tree(transform_structure(st.session_state['doc_tree']), 0))
 
         col1, col2 = st.columns(2)
@@ -274,6 +282,7 @@ elif st.session_state['generate'] == '':
         with col1:
             def return_confirm_tree():
                 st.session_state['confirm_tree'] = False
+                st.session_state['all_files'] = {}
 
             button1 = st.button('Back', on_click=return_confirm_tree, key='return_confirm_tree')
 

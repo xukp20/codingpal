@@ -6,7 +6,7 @@ st.set_page_config(
     layout="wide",
 )
 
-VIDEO_PATH = './videos/'
+VIDEO_PATH = 'help/videos/'
 st.markdown('This page should contains the instructions and examples to use CodingPal')
 st.markdown("Under construction...")
 

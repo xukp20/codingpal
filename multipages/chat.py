@@ -128,8 +128,6 @@ for s in dics:
         st.session_state[s] = {}
 if 'confirm_tree' not in st.session_state:
     st.session_state['confirm_tree'] = False
-if 'doc_tree' not in st.session_state:
-    st.session_state['doc_tree'] = []
 
 ROOT = "http://101.43.131.30:8080/structure/"
 ROOT1 = "http://101.43.131.30:8080/file/"
@@ -192,11 +190,7 @@ elif not st.session_state['confirm_tree']:
             })
 
             try:
-                st.session_state['doc_tree'] = []
-                temp1 = json.loads(reply.content)['structure']
-                for file in temp1:
-                    if file[-1] != '/':
-                        st.session_state['doc_tree'].append(file)
+                st.session_state['doc_tree'] = json.loads(reply.content)['structure']
             except:
                 pass
             reply = json.loads(reply.content)['reply']
@@ -225,10 +219,7 @@ elif not st.session_state['confirm_tree']:
             })
 
             reply = json.loads(reply.content)['structure']
-            st.session_state['doc_tree'] = []
-            for file in reply:
-                if file[-1] != '/':
-                    st.session_state['doc_tree'].append(file)
+            st.session_state['doc_tree'] = reply
 
 
         def generate_tree(childs):
@@ -256,11 +247,12 @@ elif not st.session_state['confirm_tree']:
         def confirm_tree():
             st.session_state['confirm_tree'] = True
             for i in st.session_state['doc_tree']:
-                st.session_state['all_files'][i] = {}
-                st.session_state['all_files'][i]['content'] = ''
-                st.session_state['all_files'][i]['message'] = {}
-                st.session_state['all_files'][i]['had_init'] = False
-                st.session_state['all_files'][i]['chat_msg'] = ''
+                if i[-1] != '/':
+                    st.session_state['all_files'][i] = {}
+                    st.session_state['all_files'][i]['content'] = ''
+                    st.session_state['all_files'][i]['message'] = {}
+                    st.session_state['all_files'][i]['had_init'] = False
+                    st.session_state['all_files'][i]['chat_msg'] = ''
 
 
         button2 = st.button('Confirm Tree', on_click=confirm_tree, key='confirm')
@@ -275,6 +267,7 @@ elif st.session_state['generate'] == '':
 
     with file_col:
         st.title('File Structure :evergreen_tree:')
+        print(st.session_state['doc_tree'])
         st.markdown(generate_markdown_tree(transform_structure(st.session_state['doc_tree']), 0))
 
         col1, col2 = st.columns(2)

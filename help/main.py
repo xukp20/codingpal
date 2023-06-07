@@ -11,7 +11,7 @@ st.markdown('This page should contains the instructions and examples to use Codi
 st.markdown("Under construction...")
 
 with st.expander("Some examples made with CodingPal"):
-    tab1, tab2 = st.tabs(['Blog Website', 'Image Classification'])
+    tab1, tab2, tab3 = st.tabs(['Blog Website', 'Image Classification', 'Sentiment analysis'])
     with tab1:
         st.write('Blog Website built with CodingPal: use streamlit framework, show posts from the markdown files in the posts folder')
         col1, col2, col3 = st.columns(3)
@@ -37,6 +37,18 @@ with st.expander("Some examples made with CodingPal"):
                 st.video(video_bytes)
         with col2:
             with open(VIDEO_PATH + 'class_show.mp4', 'rb') as f:
+                video_bytes = f.read()
+                st.video(video_bytes)
+
+    with tab3:
+        st.write('Sentiment analysis use nltk and treamlit framework')
+        col1, col2 = st.columns(2)
+        with col1:
+            with open(VIDEO_PATH + 'sentiment_analysis2.mkv', 'rb') as f:
+                video_bytes = f.read()
+                st.video(video_bytes)
+        with col2:
+            with open(VIDEO_PATH + 'sentiment_analysis1.mp4', 'rb') as f:
                 video_bytes = f.read()
                 st.video(video_bytes)
 
